@@ -10,13 +10,20 @@ const Header = () => {
   const { companyName, companyUrl } = useSiteMetadata();
 
   return (
-    <header>
-      <Container type="content">
-        <p>
-          <Link to="/">{ companyName }</Link>
-        </p>
-      </Container>
-    </header>
+    <nav class="navbar is-danger" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item" href={companyUrl}>
+          {companyName}
+        </a>
+
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+    </nav>
+
   );
 };
 
