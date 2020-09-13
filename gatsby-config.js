@@ -1,6 +1,6 @@
 const config = require( './package.json' );
 
-const { title, description, author, repository, homepage } = config;
+const { title, description, author, repository, homepage, version } = config;
 
 const siteMetadata = {
   companyName: title,
@@ -9,6 +9,7 @@ const siteMetadata = {
   authorUrl: author.url,
   siteUrl: homepage,
   siteDescription: description,
+  version
 };
 
 module.exports = {

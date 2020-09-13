@@ -10,6 +10,7 @@ export default function useSiteMetadata() {
           companyName
           companyUrl
           siteDescription
+          version
         }
       }
     }

@@ -34,3 +34,12 @@
   }
 
 }
+// flash effect of map location
+.flashit{
+	animation: flash linear 1s infinite;
+}
+@keyframes flash {
+	0% { opacity: .8; } 
+	50% { opacity: .2; } 
+	100% { opacity: .8; }
+}

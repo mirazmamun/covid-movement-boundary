@@ -5,13 +5,13 @@ import { useSiteMetadata } from 'hooks';
 import Container from 'components/Container';
 
 const Footer = () => {
-  const { authorName, authorUrl } = useSiteMetadata();
+  const { authorName, authorUrl, version } = useSiteMetadata();
 
   return (
-    <footer>
+    <footer className="footer-component has-text-danger">
       <Container>
         <p>
-          &copy; { new Date().getFullYear() }, <a href={authorUrl}>{ authorName }</a>
+          &copy; { new Date().getFullYear() }, <a href={authorUrl}>{ authorName }</a>. Version {version}
         </p>
       </Container>
     </footer>

@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import L from 'leaflet';
-import { Marker } from 'react-leaflet';
 
 import { promiseToFlyTo, getCurrentLocation, promiseDrawCircle, watchCurrentLoation, drawPolygon } from 'lib/map';
 
@@ -17,18 +16,45 @@ const CENTER = [LOCATION.lat, LOCATION.lng];
 const DEFAULT_ZOOM = 4;
 const ZOOM = 13;
 
-const popupContentGatsby = `
-  <div class="popup-gatsby">
-    <div class="popup-gatsby-content">
-      <p>Hello 👋</p>
-      <p>we have located your home :home:</p>
-    </div>
-  </div>
-`;
+const startLocationTracking = async (leafletElement) => {
+
+  try {
+    const location = await getCurrentLocation().catch(() => LOCATION);
+  
+    const marker = L.circleMarker(location, {radius: 10, fillColor: 'rgb(25, 153, 0)', fillOpacity: 0.8, weight: 3, opacity: 0.8, color: 'rgb(25, 153, 0)', className: 'flashit'}).addTo(leafletElement);
+    await promiseToFlyTo(leafletElement, {
+      zoom: ZOOM,
+      center: location,
+    });
+    // draw circle
+    await promiseDrawCircle({ map: leafletElement, latlng: location, radius: 5000 });
+    // add some random point
+    const doDrawPolygon = drawPolygon()
+    await watchCurrentLoation({
+      success: (latlng) => {
+        // draw polygon
+        doDrawPolygon({ map: leafletElement, latlng });
+        marker.setLatLng(latlng);
+      }, failure: (err) => {
+        console.err(err);
+      }
+    })
+  } catch (e) {
+    console.log(e);
+    alert('You must give location permission for this app to work');
+  }
+}
+
+const handleLocationPermission = (leafletElement) => {
+  startLocationTracking(leafletElement);
+}
 
 const IndexPage = () => {
-  const markerRef = useRef();
-
+  // set the modal hidden
+  const [modalState, setModalState] = useState(false);
+  const [leafletState, setLeafletState] = useState(null);
+  const [modalShowOnceState, setModalShowOnceState] = useState(false);
+  const [mapShowState, setMapShowState] = useState(false);
   /**
    * mapEffect
    * @description Fires a callback once the page renders
@@ -37,38 +63,10 @@ const IndexPage = () => {
 
   async function mapEffect({ leafletElement } = {}) {
     if (!leafletElement) return;
-
-    const popup = L.popup({
-      maxWidth: 800,
-    });
-
-    try {
-      const location = await getCurrentLocation().catch(() => LOCATION);
-
-      const { current = {} } = markerRef || {};
-      const { leafletElement: marker } = current;
-
-      marker.setLatLng(location);
-      popup.setLatLng(location);
-      marker.bindPopup(popup);
-      marker.setPopupContent(popupContentGatsby)
-      await promiseToFlyTo(leafletElement, {
-        zoom: ZOOM,
-        center: location,
-      });
-      // draw circle
-      await promiseDrawCircle({ map: leafletElement, latlng: location, radius: 5000 });
-      // add some random point
-      const doDrawPolygon = drawPolygon()
-      await watchCurrentLoation({ success: (latlng) => {
-        console.log(latlng);
-        // draw polygon
-        doDrawPolygon({ map: leafletElement, latlng});
-      }, failure: (err) => {
-        console.err(err);
-      } })
-    } catch (e) {
-      alert('You must give location permission for this app to work');
+    // show modal
+    if (!modalShowOnceState) {
+      setLeafletState(leafletElement); 
+      setModalState(true);
     }
   }
 
@@ -85,9 +83,26 @@ const IndexPage = () => {
         <title>Home Page</title>
       </Helmet>
 
-      <Map {...mapSettings}>
-        <Marker ref={markerRef} position={CENTER} />
+      <Map {...mapSettings} className={!mapShowState ? 'is-invisible' : ''}>
       </Map>
+      {/** modal */}
+      {/** TODO: move modal to its own component */}
+      <div className={modalState ? "is-active modal" : "modal"}>
+        <div className="modal-background"></div>
+        <div className="modal-card">
+          <header className="modal-card-head">
+            <p className="modal-card-title">Need Permission</p>
+          </header>
+          <section className="modal-card-body">
+            You must give explicit permission to help you track your movement. FYI, we do not track your location information, 
+            it will only be visible to you as long as you use this app. Accuracy of your location may vary depending on you device's location resolution.
+          </section>
+          <footer className="modal-card-foot">
+            <button className="button is-success" onClick={() => { setMapShowState(true); setModalState(false); setModalShowOnceState(true); handleLocationPermission(leafletState); }}>Sure</button>
+            <button className="button">I will pass</button>
+          </footer>
+        </div>
+      </div>
     </Layout>
   );
 };
